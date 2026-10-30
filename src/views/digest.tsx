@@ -40,7 +40,8 @@ export function DigestPage({ digest }: { digest: DigestNight }) {
   return (
     <>
       <h1>{`digest · ${digest.night}`}</h1>
-      {digest.rows.length === 0 ? <p class="mute">nothing ran</p> : <DigestTable rows={digest.rows} />}
+      {digest.rows.length > 0 ? <DigestTable rows={digest.rows} /> : null}
+      {digest.rows.length === 0 && digest.badLines === 0 ? <p class="mute">nothing ran</p> : null}
       {digest.badLines > 0 ? (
         <p class="mute">{`${digest.badLines} bad ${digest.badLines === 1 ? 'line' : 'lines'} skipped`}</p>
       ) : null}

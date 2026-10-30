@@ -11,6 +11,7 @@ const FOUND = '2026-10-28'; // copy of runs/2026-10-28.jsonl: 5 jobs, 1 bad line
 const EMPTY = '2026-10-20'; // file exists, no lines
 const ONE_BAD = '2026-10-21'; // one bad line, one good line
 const TWO_BAD = '2026-10-23'; // two bad lines, one good line
+const ALL_BAD = '2026-10-24'; // bad lines only
 const MISSING = '2026-10-22'; // no file
 
 const GOOD = '{"at":"2026-10-21T01:00:00+01:00","job":"lane/sync","status":"ok","owner":"rook"}';
@@ -24,6 +25,7 @@ beforeAll(() => {
   writeFileSync(join(runsDir, `${EMPTY}.jsonl`), '');
   writeFileSync(join(runsDir, `${ONE_BAD}.jsonl`), `{"at":"2026-10-21T00:00:\n${GOOD}\n`);
   writeFileSync(join(runsDir, `${TWO_BAD}.jsonl`), `not json\n${GOOD}\n["array"]\n`);
+  writeFileSync(join(runsDir, `${ALL_BAD}.jsonl`), 'not json\n["array"]\n');
   app = createApp({ adapter: 'shim', installed: '2026-10-29T14:06:00+01:00', beatEverySeconds: 60, runsDir });
 });
 
@@ -115,6 +117,12 @@ describe('GET /digest/:night', () => {
 
   it('pluralises the bad-line note', async () => {
     const { html } = await page(TWO_BAD);
+    expect(html).toContain('<p class="mute">2 bad lines skipped</p>');
+  });
+
+  it('never says "nothing ran" over a night of bad lines only', async () => {
+    const { html } = await page(ALL_BAD);
+    expect(html).not.toContain('nothing ran');
     expect(html).toContain('<p class="mute">2 bad lines skipped</p>');
   });
 });

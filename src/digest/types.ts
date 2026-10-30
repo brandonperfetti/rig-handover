@@ -10,10 +10,11 @@ export type RunStatus = 'ok' | 'retry' | 'fail';
 
 /**
  * One valid line of `runs/<night>.jsonl`. Required: `at`, `job`, `status`, `owner`.
- * - `at`: ISO 8601 with seconds and an offset (`Z` or `±hh:mm`), kept exactly as logged.
+ * - `at`: ISO 8601 with seconds and an offset (`Z` or `±hh:mm`), on a real calendar date, kept
+ *   exactly as logged.
  * - `job`: non-empty string.
- * - `owner`: string or `null` (the key must be present).
- * - `error`: optional string; absent and `null` both mean "no error".
+ * - `owner`: string or `null` (the key must be present). A blank string reads as `null`.
+ * - `error`: optional string; absent, `null` and a blank string all mean "no error".
  * Extra keys are ignored. Any line that breaks these rules is a bad line (see `DigestNight`).
  */
 export type RunLine = {
@@ -62,7 +63,7 @@ export type StatusCounts = Record<RunStatus, number>;
 export type DigestNight = {
   /** The night asked for, `YYYY-MM-DD`. */
   night: string;
-  /** One row per job, sorted by `job` (plain string order, `<`). Empty when nothing ran. */
+  /** One row per job, sorted by `job` (plain string order, `<`). Empty when no line was valid: nothing ran, or every line was bad. */
   rows: DigestRow[];
   /**
    * Lines that could not be read: bad JSON (a truncated last line, say), not an object, or a

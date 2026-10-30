@@ -44,8 +44,8 @@ One check anyone can run.
 
 ## Blocked by
 
-Every blocker: #<n>, #<m> (what to start against meanwhile), plus any non-issue blocker in plain
-words, such as a review. Or "nothing".
+Every blocker: #<n>, #<m>, with what to start against meanwhile if there is anything, plus any
+non-issue blocker in plain words, such as a review. With none: `—`.
 
 ## Model tier
 

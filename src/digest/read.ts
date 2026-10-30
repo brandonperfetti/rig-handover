@@ -26,12 +26,15 @@ export function parseLine(text: string): RunLine | null {
   if (!isRecord(value)) return null;
   const { at, job, status, owner, error } = value;
   if (typeof at !== 'string' || !AT.test(at) || Number.isNaN(Date.parse(at))) return null;
+  // Date.parse rolls an impossible date forward (Feb 31 becomes Mar 3), so check the day survives.
+  const day = at.slice(0, 10);
+  if (new Date(`${day}T00:00:00Z`).toISOString().slice(0, 10) !== day) return null;
   if (typeof job !== 'string' || job === '') return null;
   if (!isStatus(status)) return null;
   if (!('owner' in value) || (owner !== null && typeof owner !== 'string')) return null;
   if (error !== undefined && error !== null && typeof error !== 'string') return null;
-  const line: RunLine = { at, job, status, owner };
-  if (typeof error === 'string') line.error = error;
+  const line: RunLine = { at, job, status, owner: owner?.trim() ? owner : null };
+  if (typeof error === 'string' && error.trim() !== '') line.error = error;
   return line;
 }
 

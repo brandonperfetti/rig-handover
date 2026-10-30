@@ -123,6 +123,7 @@ describe('digestNight', () => {
       JSON.stringify({ at: '2026-10-29T01:00:00+01:00', job: 'a', status: 'ok' }), // no owner key
       line({ at: '2026-10-29 01:00' }), // no T, no offset
       line({ at: '2026-10-29T01:00:00' }), // no offset
+      line({ at: '2026-02-31T01:00:00Z' }), // no such day
       line({ job: '' }),
       line({ job: 3 }),
       line({ status: 'done' }),
@@ -131,8 +132,28 @@ describe('digestNight', () => {
       line({}),
     ].join('\n');
     const night = digestNight('2026-10-29', text);
-    expect(night.badLines).toBe(11);
+    expect(night.badLines).toBe(12);
     expect(night.rows).toHaveLength(1);
+  });
+
+  it.each(['', '  '])('reads a blank owner or error (%j) as missing', (blank) => {
+    expect(parseLine(line({ owner: blank, error: blank }))).toEqual({
+      at: '2026-10-29T01:00:00+01:00',
+      job: 'a',
+      status: 'ok',
+      owner: null,
+    });
+  });
+
+  it('keeps the last real error when a later line has an empty one', () => {
+    const { rows } = digestNight(
+      'n',
+      [
+        line({ status: 'fail', error: 'disk full' }),
+        line({ at: '2026-10-29T02:00:00+01:00', status: 'retry', error: '' }),
+      ].join('\n'),
+    );
+    expect(rows[0]!.lastError).toBe('disk full');
   });
 
   it('treats error: null as no error', () => {
