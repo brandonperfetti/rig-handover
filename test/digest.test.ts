@@ -29,6 +29,7 @@ describe('readNight on runs/2026-10-28.jsonl', () => {
       owner: null,
       runs: 1,
       retries: 0,
+      fails: 0,
       lastStatus: 'ok',
       lastError: null,
       firstAt: '2026-10-29T05:41:09+01:00',
@@ -36,28 +37,36 @@ describe('readNight on runs/2026-10-28.jsonl', () => {
     });
   });
 
-  it('counts retries; last status and error come from the latest line', () => {
+  it('counts retries; last status from the latest line, last error from the latest line with one', () => {
     expect(row('fixtures/refresh')).toEqual({
       job: 'fixtures/refresh',
       owner: 'rook',
       runs: 4,
       retries: 3,
+      fails: 0,
       lastStatus: 'ok',
-      lastError: null,
+      lastError: 'upstream 503',
       firstAt: '2026-10-29T01:30:00+01:00',
       lastAt: '2026-10-29T01:37:00+01:00',
     });
   });
 
   it('shows a fail with its error', () => {
-    expect(row('notes/backup')).toMatchObject({ owner: 'lane-07', lastStatus: 'fail', lastError: 'quota exceeded' });
+    expect(row('notes/backup')).toMatchObject({
+      owner: 'lane-07',
+      fails: 1,
+      lastStatus: 'fail',
+      lastError: 'quota exceeded',
+    });
   });
 
   it('keeps times exactly as logged, offset and all', () => {
     expect(row('lane/sync')).toMatchObject({
       runs: 8,
       retries: 1,
+      fails: 0,
       lastStatus: 'ok',
+      lastError: 'lock held',
       firstAt: '2026-10-28T23:00:06+01:00',
       lastAt: '2026-10-29T05:00:04+01:00',
     });
@@ -156,10 +165,36 @@ describe('digestNight', () => {
     expect(digestNight('n', text).rows[0]).toMatchObject({
       owner: null,
       lastStatus: 'ok',
-      lastError: null,
+      lastError: 'first',
       firstAt: '2026-10-29T01:00:00+01:00',
       lastAt: '2026-10-29T00:00:00Z',
     });
+  });
+
+  it('counts fails, so a fail followed by an ok still shows', () => {
+    const text = [
+      line({ at: '2026-10-29T01:00:00+01:00', status: 'fail', error: 'disk full' }),
+      line({ at: '2026-10-29T02:00:00+01:00', status: 'fail', error: 'disk full again' }),
+      line({ at: '2026-10-29T03:00:00+01:00', status: 'ok' }),
+    ].join('\n');
+    expect(digestNight('n', text).rows[0]).toMatchObject({
+      runs: 3,
+      retries: 0,
+      fails: 2,
+      lastStatus: 'ok',
+      lastError: 'disk full again',
+    });
+  });
+
+  it('last error is the latest by time, not by file position, and null when no line had one', () => {
+    const late = [
+      line({ at: '2026-10-29T03:00:00+01:00', status: 'retry', error: 'late' }),
+      line({ at: '2026-10-29T01:00:00+01:00', status: 'retry', error: 'early' }),
+      line({ at: '2026-10-29T04:00:00+01:00', status: 'ok' }),
+    ].join('\n');
+    expect(digestNight('n', late).rows[0]!.lastError).toBe('late');
+    const clean = [line({}), line({ at: '2026-10-29T02:00:00+01:00', error: null })].join('\n');
+    expect(digestNight('n', clean).rows[0]!.lastError).toBeNull();
   });
 
   it('sorts rows by job in plain string order', () => {

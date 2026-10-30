@@ -45,17 +45,22 @@ function isLater(b: Entry, a: Entry): boolean {
 function toRow(entries: Entry[]): DigestRow {
   let first = entries[0]!;
   let last = entries[0]!;
+  let lastWithError: Entry | null = entries[0]!.line.error === undefined ? null : entries[0]!;
   for (const entry of entries.slice(1)) {
     if (entry.time < first.time) first = entry;
     if (isLater(entry, last)) last = entry;
+    if (entry.line.error !== undefined && (lastWithError === null || isLater(entry, lastWithError))) {
+      lastWithError = entry;
+    }
   }
   return {
     job: last.line.job,
     owner: last.line.owner,
     runs: entries.length,
     retries: entries.filter((e) => e.line.status === 'retry').length,
+    fails: entries.filter((e) => e.line.status === 'fail').length,
     lastStatus: last.line.status,
-    lastError: last.line.error ?? null,
+    lastError: lastWithError?.line.error ?? null,
     firstAt: first.line.at,
     lastAt: last.line.at,
   };

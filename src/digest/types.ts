@@ -37,9 +37,17 @@ export type DigestRow = {
   runs: number;
   /** Number of the job's lines with status `retry`. */
   retries: number;
+  /**
+   * Number of the job's lines with status `fail`. The page marks a job with `fails > 0`, so a
+   * fail followed by an ok is still marked.
+   */
+  fails: number;
   /** Status of the job's latest line. */
   lastStatus: RunStatus;
-  /** `error` of the job's latest line, or `null` if that line has none (earlier errors are not carried over). */
+  /**
+   * `error` of the job's latest line that has one, or `null` if no line had an error. It stays set
+   * after a recovery (a job that retried on "upstream 503", then ran ok, shows "upstream 503").
+   */
   lastError: string | null;
   /** `at` of the job's earliest line, exactly as in the log (offset kept, never converted to UTC). */
   firstAt: string;
