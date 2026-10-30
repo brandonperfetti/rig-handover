@@ -14,17 +14,51 @@ in a shell this agent can run.
 2. Draft the split as a table: title · plan section · scope · done when · blocked by.
    One issue per unit of work.
 3. **Stop and show the table to the human.** Publish nothing until they approve it.
-4. Ask the human what every issue here must carry (fields, labels, wording), unless it is
-   already written down in this session or in the repo.
+4. Every issue carries the shape under [What every issue carries](#what-every-issue-carries).
+   Ask the human only about a field or label it doesn't cover.
 5. Create each issue in dependency order, so blocked-by can cite real numbers:
 
    ```sh
-   gh issue create --title "<title>" --body-file <tmp.md>
+   gh issue create --title "<title>" --label "plan:<plan>" --body-file <tmp.md>
    ```
+
+   `<plan>` is the `plan:` key in `plan.md`'s frontmatter. Create the label once if it's missing
+   (`gh label create "plan:<plan>"`).
 
 6. Record every issue URL from gh's output (not from memory) and reply with the list.
 
-Closing one, with the closing comment from AGENTS.md:
+## What every issue carries
+
+Approved by the human for the morning-digest plan (2026-10-29). Label `plan:<plan>`, and a body in
+this order:
+
+```md
+Source: plan.md § <n>
+
+## Scope
+
+What to build, with the ADRs it must keep. Enough for a worker who hasn't read the plan.
+
+## Done when
+
+One check anyone can run.
+
+## Blocked by
+
+#<n> (what to start against meanwhile), or "nothing".
+
+## Model tier
+
+<kind>: <tier> model.
+```
+
+The first line is exactly `Source: plan.md § <n>`, nothing before it. Model tier follows AGENTS.md
+step 3: `Logic: strongest model.` for logic; `View`, `Route`, `Tests` or `Mechanical` with
+`cheaper model.` for the rest.
+
+## Closing one
+
+With the closing comment from AGENTS.md:
 
 ```sh
 gh issue close <n> -c "<closing comment>"
