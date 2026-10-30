@@ -29,8 +29,7 @@ in a shell this agent can run.
 
 ## What every issue carries
 
-Approved by the human for the morning-digest plan (2026-10-29). Label `plan:<plan>`, and a body in
-this order:
+Label `plan:<plan>`, and a body in this order:
 
 ```md
 Source: plan.md § <n>
@@ -45,7 +44,8 @@ One check anyone can run.
 
 ## Blocked by
 
-#<n> (what to start against meanwhile), or "nothing".
+Every blocker: #<n>, #<m> (what to start against meanwhile), plus any non-issue blocker in plain
+words, such as a review. Or "nothing".
 
 ## Model tier
 
